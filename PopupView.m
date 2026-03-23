@@ -207,16 +207,58 @@
 }
 
 - (void)loadUserAvatar {
+    // 方案二：加载小红书真实用户头像
     dispatch_async(dispatch_get_global_queue(0, 0), ^{
-        UIGraphicsBeginImageContextWithOptions(CGSizeMake(80, 80), NO, [UIScreen mainScreen].scale);
-        [[UIColor xy_colorWithHex:0x0088FF] setFill];
-        UIBezierPath *path = [UIBezierPath bezierPathWithOvalInRect:CGRectMake(0, 0, 80, 80)];
-        [path fill];
-        UIImage *avatarImage = UIGraphicsGetImageFromCurrentImageContext();
-        UIGraphicsEndImageContext();
+        // 1. 获取小红书用户头像URL（替换成你实际找到的key）
+        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+        NSString *avatarUrlStr = [defaults stringForKey:@"user_avatar_url"]; // 替换成真实key
+        if (!avatarUrlStr || avatarUrlStr.length == 0) {
+            // 兜底：无真实头像时显示默认头像
+            [self loadDefaultAvatar];
+            return;
+        }
+        
+        // 2. 下载头像图片
+        NSURL *avatarUrl = [NSURL URLWithString:avatarUrlStr];
+        NSData *imageData = [NSData dataWithContentsOfURL:avatarUrl];
+        UIImage *avatarImage = nil;
+        if (imageData) {
+            avatarImage = [UIImage imageWithData:imageData];
+        }
+        
+        // 3. 切圆角并显示
+        if (avatarImage) {
+            // 裁剪成圆形头像
+            UIGraphicsBeginImageContextWithOptions(CGSizeMake(80, 80), NO, [UIScreen mainScreen].scale);
+            UIBezierPath *circlePath = [UIBezierPath bezierPathWithOvalInRect:CGRectMake(0, 0, 80, 80)];
+            [circlePath addClip];
+            [avatarImage drawInRect:CGRectMake(0, 0, 80, 80)];
+            UIImage *circleAvatar = UIGraphicsGetImageFromCurrentImageContext();
+            UIGraphicsEndImageContext();
+            avatarImage = circleAvatar;
+        } else {
+            // 下载失败，显示默认头像
+            [self loadDefaultAvatar];
+            return;
+        }
+        
         dispatch_async(dispatch_get_main_queue(), ^{
             self.avatarImgView.image = avatarImage;
         });
+    });
+}
+
+// 新增：默认头像兜底方法（直接加在loadUserAvatar下面）
+- (void)loadDefaultAvatar {
+    UIGraphicsBeginImageContextWithOptions(CGSizeMake(80, 80), NO, [UIScreen mainScreen].scale);
+    [[UIColor xy_colorWithHex:0x0088FF] setFill];
+    UIBezierPath *path = [UIBezierPath bezierPathWithOvalInRect:CGRectMake(0, 0, 80, 80)];
+    [path fill];
+    UIImage *avatarImage = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        self.avatarImgView.image = avatarImage;
     });
 }
 
