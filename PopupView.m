@@ -23,23 +23,7 @@
 
 @implementation PopupView
 
-+ (void)showPopupIfNeeded {
-    NSLog(@"🔥 showPopupIfNeeded 被调用了");
-
-    BOOL notShowAgain = [[NSUserDefaults standardUserDefaults] boolForKey:kPopupNotShowAgainKey];
-    if (notShowAgain) {
-        NSLog(@"🔥 因为不再提示，所以不显示");
-        return;
-    }
-
-+ (UIEdgeInsets)getSafeAreaInsets {
-    if (@available(iOS 11.0, *)) {
-        UIWindow *window = [self getValidWindow];
-        return window.safeAreaInsets;
-    }
-    return UIEdgeInsetsZero;
-}
-
+// 修复1：移除重复定义，只保留一个getSafeAreaInsets方法
 + (UIEdgeInsets)getSafeAreaInsets {
     if (@available(iOS 11.0, *)) {
         UIWindow *window = [self getValidWindow];
@@ -83,6 +67,34 @@
     }
     
     return validWindow;
+}
+
+// 修复2：合并重复的showPopupIfNeeded方法，补全所有括号
++ (void)showPopupIfNeeded {
+    NSLog(@"🔥 showPopupIfNeeded 被调用了");
+
+    BOOL notShowAgain = [[NSUserDefaults standardUserDefaults] boolForKey:kPopupNotShowAgainKey];
+    if (notShowAgain) {
+        NSLog(@"🔥 因为不再提示，所以不显示");
+        return;
+    }
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        UIWindow *validWindow = [self getValidWindow];
+        if (!validWindow) return;
+        
+        PopupView *popup = [[PopupView alloc] initWithFrame:validWindow.bounds];
+        [validWindow addSubview:popup];
+        // 新增：确保弹窗在最上层
+        [validWindow bringSubviewToFront:popup];
+        
+        popup.alpha = 0;
+        popup.contentView.transform = CGAffineTransformMakeScale(0.8, 0.8);
+        [UIView animateWithDuration:0.3 delay:0 usingSpringWithDamping:0.9 initialSpringVelocity:0.7 options:UIViewAnimationOptionCurveEaseOut animations:^{
+            popup.alpha = 1;
+            popup.contentView.transform = CGAffineTransformIdentity;
+        } completion:nil];
+    });
 }
 
 - (instancetype)initWithFrame:(CGRect)frame {
@@ -304,26 +316,6 @@
     } completion:^(BOOL finished) {
         [self removeFromSuperview];
     }];
-}
-
-+ (void)showPopupIfNeeded {
-    BOOL notShowAgain = [[NSUserDefaults standardUserDefaults] boolForKey:kPopupNotShowAgainKey];
-    if (notShowAgain) return;
-    
-    dispatch_async(dispatch_get_main_queue(), ^{
-        UIWindow *validWindow = [self getValidWindow];
-        if (!validWindow) return;
-        
-        PopupView *popup = [[PopupView alloc] initWithFrame:validWindow.bounds];
-        [validWindow addSubview:popup];
-        
-        popup.alpha = 0;
-        popup.contentView.transform = CGAffineTransformMakeScale(0.8, 0.8);
-        [UIView animateWithDuration:0.3 delay:0 usingSpringWithDamping:0.9 initialSpringVelocity:0.7 options:UIViewAnimationOptionCurveEaseOut animations:^{
-            popup.alpha = 1;
-            popup.contentView.transform = CGAffineTransformIdentity;
-        } completion:nil];
-    });
 }
 
 @end
