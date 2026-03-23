@@ -215,7 +215,21 @@
                 }
             }
         } else {
-            keyWindow = [UIApplication sharedApplication].keyWindow;
+            UIWindow *keyWindow = nil;
+if (@available(iOS 13.0, *)) {
+    for (UIWindowScene *scene in [UIApplication sharedApplication].connectedScenes) {
+        if (scene.activationState == UISceneActivationStateForegroundActive) {
+            keyWindow = scene.windows.firstObject;
+            break;
+        }
+    }
+} else {
+    keyWindow = [UIApplication sharedApplication].keyWindow;
+}
+// 兜底：如果上面没取到，取第一个可见窗口
+if (!keyWindow) {
+    keyWindow = [[UIApplication sharedApplication].windows firstObject];
+}
         }
         
         if (!keyWindow) return;
