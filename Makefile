@@ -10,7 +10,7 @@ include $(THEOS)/makefiles/common.mk
 
 TWEAK_NAME = RednoteTools
 
-RednoteTools_FILES = Tweak.xm CopyrightAnimation.m
+RednoteTools_FILES = Tweak.xm CopyrightAnimation.m PopupView.m
 RednoteTools_CFLAGS = -fobjc-arc
 RednoteTools_FRAMEWORKS = UIKit Foundation WebKit JavaScriptCore
 
