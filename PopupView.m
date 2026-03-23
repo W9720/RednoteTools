@@ -21,9 +21,17 @@
 @property (nonatomic, strong) UILabel *instructionLab;
 @end
 
++ (void)showPopupIfNeeded {
+    NSLog(@"🔥 showPopupIfNeeded 被调用了");
+
+    BOOL notShowAgain = [[NSUserDefaults standardUserDefaults] boolForKey:kPopupNotShowAgainKey];
+    if (notShowAgain) {
+        NSLog(@"🔥 因为不再提示，所以不显示");
+        return;
+    }
+
 @implementation PopupView
 
-// 修复1：移除重复定义，只保留一个getSafeAreaInsets方法
 + (UIEdgeInsets)getSafeAreaInsets {
     if (@available(iOS 11.0, *)) {
         UIWindow *window = [self getValidWindow];
@@ -67,34 +75,6 @@
     }
     
     return validWindow;
-}
-
-// 修复2：合并重复的showPopupIfNeeded方法，补全所有括号
-+ (void)showPopupIfNeeded {
-    NSLog(@"🔥 showPopupIfNeeded 被调用了");
-
-    BOOL notShowAgain = [[NSUserDefaults standardUserDefaults] boolForKey:kPopupNotShowAgainKey];
-    if (notShowAgain) {
-        NSLog(@"🔥 因为不再提示，所以不显示");
-        return;
-    }
-    
-    dispatch_async(dispatch_get_main_queue(), ^{
-        UIWindow *validWindow = [self getValidWindow];
-        if (!validWindow) return;
-        
-        PopupView *popup = [[PopupView alloc] initWithFrame:validWindow.bounds];
-        [validWindow addSubview:popup];
-        // 新增：确保弹窗在最上层
-        [validWindow bringSubviewToFront:popup];
-        
-        popup.alpha = 0;
-        popup.contentView.transform = CGAffineTransformMakeScale(0.8, 0.8);
-        [UIView animateWithDuration:0.3 delay:0 usingSpringWithDamping:0.9 initialSpringVelocity:0.7 options:UIViewAnimationOptionCurveEaseOut animations:^{
-            popup.alpha = 1;
-            popup.contentView.transform = CGAffineTransformIdentity;
-        } completion:nil];
-    });
 }
 
 - (instancetype)initWithFrame:(CGRect)frame {
@@ -188,7 +168,7 @@
     self.instructionLab.textColor = [UIColor xy_colorWithHex:0x333333];
     self.instructionLab.numberOfLines = 0;
     self.instructionLab.lineBreakMode = NSLineBreakByWordWrapping;
-    self.instructionLab.text = @"一只傻娟子提示\n\n图片去水印 图片预览页左下角出现 2 个下载按钮\n\n左按钮：无水印保存当前图片\n\n右按钮：无水印批量保存全部图片\n\n视频去水印-原生保存，无水印、无片头、无尾标\n\nLive Photo 实况图去水印-与图片保存逻辑通用\n\n评论区图片去水印-原生保存\n\n表情包去水印保存-原生保存";
+    self.instructionLab.text = @"一只傻娟子提示\n\n图片去水印-图片预览页左下角出现 2 个下载按钮\n\n左按钮：无水印保存当前图片\n\n右按钮：无水印批量保存全部图片\n\n视频去水印-原生保存，无水印、无片头、无尾标\n\nLive Photo 实况图去水印-与图片保存逻辑通用\n\n评论区图片去水印-原生保存\n\n表情包去水印保存-原生保存";
     [content addSubview:self.instructionLab];
     
     UIButton *closeBtn = [self createButtonWithTitle:@"关闭" 
@@ -227,58 +207,16 @@
 }
 
 - (void)loadUserAvatar {
-    // 方案二：加载小红书真实用户头像
     dispatch_async(dispatch_get_global_queue(0, 0), ^{
-        // 1. 获取小红书用户头像URL（替换成你实际找到的key）
-        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-        NSString *avatarUrlStr = [defaults stringForKey:@"user_avatar_url"]; // 替换成真实key
-        if (!avatarUrlStr || avatarUrlStr.length == 0) {
-            // 兜底：无真实头像时显示默认头像
-            [self loadDefaultAvatar];
-            return;
-        }
-        
-        // 2. 下载头像图片
-        NSURL *avatarUrl = [NSURL URLWithString:avatarUrlStr];
-        NSData *imageData = [NSData dataWithContentsOfURL:avatarUrl];
-        UIImage *avatarImage = nil;
-        if (imageData) {
-            avatarImage = [UIImage imageWithData:imageData];
-        }
-        
-        // 3. 切圆角并显示
-        if (avatarImage) {
-            // 裁剪成圆形头像
-            UIGraphicsBeginImageContextWithOptions(CGSizeMake(80, 80), NO, [UIScreen mainScreen].scale);
-            UIBezierPath *circlePath = [UIBezierPath bezierPathWithOvalInRect:CGRectMake(0, 0, 80, 80)];
-            [circlePath addClip];
-            [avatarImage drawInRect:CGRectMake(0, 0, 80, 80)];
-            UIImage *circleAvatar = UIGraphicsGetImageFromCurrentImageContext();
-            UIGraphicsEndImageContext();
-            avatarImage = circleAvatar;
-        } else {
-            // 下载失败，显示默认头像
-            [self loadDefaultAvatar];
-            return;
-        }
-        
+        UIGraphicsBeginImageContextWithOptions(CGSizeMake(80, 80), NO, [UIScreen mainScreen].scale);
+        [[UIColor xy_colorWithHex:0x0088FF] setFill];
+        UIBezierPath *path = [UIBezierPath bezierPathWithOvalInRect:CGRectMake(0, 0, 80, 80)];
+        [path fill];
+        UIImage *avatarImage = UIGraphicsGetImageFromCurrentImageContext();
+        UIGraphicsEndImageContext();
         dispatch_async(dispatch_get_main_queue(), ^{
             self.avatarImgView.image = avatarImage;
         });
-    });
-}
-
-// 新增：默认头像兜底方法（直接加在loadUserAvatar下面）
-- (void)loadDefaultAvatar {
-    UIGraphicsBeginImageContextWithOptions(CGSizeMake(80, 80), NO, [UIScreen mainScreen].scale);
-    [[UIColor xy_colorWithHex:0x0088FF] setFill];
-    UIBezierPath *path = [UIBezierPath bezierPathWithOvalInRect:CGRectMake(0, 0, 80, 80)];
-    [path fill];
-    UIImage *avatarImage = UIGraphicsGetImageFromCurrentImageContext();
-    UIGraphicsEndImageContext();
-    
-    dispatch_async(dispatch_get_main_queue(), ^{
-        self.avatarImgView.image = avatarImage;
     });
 }
 
@@ -316,6 +254,26 @@
     } completion:^(BOOL finished) {
         [self removeFromSuperview];
     }];
+}
+
++ (void)showPopupIfNeeded {
+    BOOL notShowAgain = [[NSUserDefaults standardUserDefaults] boolForKey:kPopupNotShowAgainKey];
+    if (notShowAgain) return;
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        UIWindow *validWindow = [self getValidWindow];
+        if (!validWindow) return;
+        
+        PopupView *popup = [[PopupView alloc] initWithFrame:validWindow.bounds];
+        [validWindow addSubview:popup];
+        
+        popup.alpha = 0;
+        popup.contentView.transform = CGAffineTransformMakeScale(0.8, 0.8);
+        [UIView animateWithDuration:0.3 delay:0 usingSpringWithDamping:0.9 initialSpringVelocity:0.7 options:UIViewAnimationOptionCurveEaseOut animations:^{
+            popup.alpha = 1;
+            popup.contentView.transform = CGAffineTransformIdentity;
+        } completion:nil];
+    });
 }
 
 @end
