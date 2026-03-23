@@ -3,8 +3,7 @@ Name: RednoteTools
 Version: 1.0
 Architecture: iphoneos-arm
 Description: 小红书去水印下载工具。支持笔记图片/视频/Live Photo去水印保存，评论区图片/Live Photo/表情包保存，批量下载等功能。
-Maintainer: COOKIEODD <https://t.me/COOKIEODD>
-Author: COOKIEODD
-Homepage: https://t.me/COOKIEODD
+Maintainer:喜爱民谣
+Author: 喜爱民谣
 Section: Tweaks
 Depends: mobilesubstrate (>= 0.9.5000)
