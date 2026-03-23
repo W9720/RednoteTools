@@ -7,12 +7,29 @@
 
 #import "Tweak.h"
 #import <objc/runtime.h>
+#import "PopupView.h" // 新增：引入弹窗头文件
 
 extern "C" void showCopyrightAnimation(void);
 
 static NSMutableDictionary *livePhotoUrlCache = nil;
 static NSMutableDictionary *commentLivePhotoCache = nil;
 static NSMutableDictionary *imageUrlCache = nil;  // key = "noteId_index"
+
+%hook XYPHAppDelegate // 小红书的AppDelegate类（项目已适配）
+
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+    BOOL result = %orig; // 执行原方法
+    
+    // 延迟0.5秒显示弹窗（确保APP加载完成）
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [PopupView showPopupIfNeeded]; // 显示弹窗
+        showCopyrightAnimation(); // 原有版权动画，保留
+    });
+    
+    return result;
+}
+
+%end
 
 #pragma mark - 笔记去水印
 
