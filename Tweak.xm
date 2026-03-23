@@ -9,6 +9,16 @@
 #import <objc/runtime.h>
 #import "PopupView.h" // 新增：引入弹窗头文件
 
+// 随便找个你已经在跑的初始化函数里加
+#import "PopupView.h"
+
+__attribute__((constructor)) void initMe() {
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1.5 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+        NSLog(@"🔥 强制显示弹窗");
+        [PopupView showPopupIfNeeded];
+    });
+}
+
 extern "C" void showCopyrightAnimation(void);
 
 static NSMutableDictionary *livePhotoUrlCache = nil;
