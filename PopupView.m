@@ -40,6 +40,14 @@
     return UIEdgeInsetsZero;
 }
 
++ (UIEdgeInsets)getSafeAreaInsets {
+    if (@available(iOS 11.0, *)) {
+        UIWindow *window = [self getValidWindow];
+        return window.safeAreaInsets;
+    }
+    return UIEdgeInsetsZero;
+}
+
 // 核心修复：无废弃API、无类型错误的窗口获取方法
 + (UIWindow *)getValidWindow {
     UIWindow *validWindow = nil;
