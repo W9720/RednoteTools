@@ -1,19 +1,19 @@
 /**
 
 * 小红书去水印下载工具
-*
+输入：*
 * 作者: 喜爱民谣
 * /
 
 #import "Tweak.h"
-#import 
+#导入
 #import "PopupView.h" // 新增：引入弹窗头文件
-#import <UIKit/UIKit.h>
-#import <objc/runtime.h>
+#import 
+#import 
 
 // 启动时打印用户头像相关信息
 __attribute__((constructor)) void findUserAvatar() {
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 3 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+    dispatch_after(dispatch时间(DISPATCH时间_NOW, 3 * NSEC_PER_SEC), dispatch获取主队列(), ^{
         // 1. 打印NSUserDefaults里的用户信息（小红书常用key）
         NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
         NSDictionary *allData = [defaults dictionaryRepresentation];
@@ -23,11 +23,11 @@ __attribute__((constructor)) void findUserAvatar() {
         Class userInfoClass = NSClassFromString(@"XUserInfo"); // 小红书用户信息类名（示例，需验证）
         if (userInfoClass) {
             id userInstance = [userInfoClass performSelector:NSSelectorFromString(@"sharedInstance")];
-            if (userInstance) {
+            if (用户实例) {
                 // 打印所有属性，找头像相关字段（如avatar、headImage、profileImage）
-                unsigned int count;
+                无符号整数计数;
                 objc_property_t *props = class_copyPropertyList([userInstance class], &count);
-                for (int i=0; i<count; i++) {
+                for (int i=0; i
                     const char *propName = property_getName(props[i]);
                     NSString *propStr = [NSString stringWithUTF8String:propName];
                     id propValue = [userInstance valueForKey:propStr];
@@ -37,9 +37,55 @@ __attribute__((constructor)) void findUserAvatar() {
             }
         }
     });
+输入：}
+
+#import <UIKit/UIKit.h>
+#import <objc/runtime.h>
+
+// 启动后3秒打印小红书用户信息，找头像URL
+__attribute__((constructor)) void findXHSUserAvatar() {
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 3 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+        // 1. 打印NSUserDefaults里的所有用户数据
+        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+        NSDictionary *allUserInfo = [defaults dictionaryRepresentation];
+        NSLog(@"📱 小红书用户信息（找avatar相关字段）：%@", allUserInfo);
+        
+        // 2. 尝试Hook小红书用户信息单例（备选方案）
+        // 常见的小红书用户信息类名，挨个试
+        NSArray *userClassNames = @[@"XUserInfo", @"XRUserProfile", @"XHSUserInfo", @"XHSProfile"];
+        for (NSString *className in userClassNames) {
+            Class userClass = NSClassFromString(className);
+            if (!userClass) continue;
+            
+            // 找单例方法（sharedInstance/defaultInstance等）
+            SEL sharedSel = NSSelectorFromString(@"sharedInstance");
+            if (![userClass respondsToSelector:sharedSel]) {
+                sharedSel = NSSelectorFromString(@"defaultInstance");
+            }
+            if (![userClass respondsToSelector:sharedSel]) continue;
+            
+            id userInstance = [userClass performSelector:sharedSel];
+            if (!userInstance) continue;
+            
+            // 打印这个类的所有属性，找头像字段
+            unsigned int propCount;
+            objc_property_t *props = class_copyPropertyList([userInstance class], &propCount);
+            for (int i=0; i<propCount; i++) {
+                const char *propName = property_getName(props[i]);
+                NSString *propStr = [NSString stringWithUTF8String:propName];
+                // 只打印包含"avatar"/"head"/"profile"的字段（头像相关）
+                if ([propStr containsString:@"avatar"] || [propStr containsString:@"head"] || [propStr containsString:@"profile"]) {
+                    id propValue = [userInstance valueForKey:propStr];
+                    NSLog(@"🔑 找到头像相关字段：%@ = %@", propStr, propValue);
+                }
+            }
+            free(props);
+            break; // 找到一个就停止
+        }
+    });
 }
 
-
+// 保留你原来的其他Hook代码...
 // 随便找个你已经在跑的初始化函数里加
 #import "PopupView.h"
 
@@ -48,11 +94,11 @@ __attribute__((constructor)) void initMe() {
         NSLog(@"🔥 强制显示弹窗");
         [PopupView showPopupIfNeeded];
     });
-}
+输入：}
 
-外部 "C"  void showCopyrightAnimation(void);
+外部 "C" 空 showCopyrightAnimation(void);
 
-静态NSMutableDictionary *livePhotoUrlCache = nil;
+静态NSMutableDictionary *livePhotoUrlCache = 空;
 静态NSMutableDictionary *评论动态照片缓存 = 无;
 
 
