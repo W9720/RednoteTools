@@ -1,8 +1,5 @@
-#import "PopupView.h"
 #import "Tweak.h"
 #import <UIKit/UIKit.h>
-#import <Photos/Photos.h>
-#import <objc/runtime.h>
 
 #define kPopupNotShowAgainKey @"RednoteToolsPopupNotShowAgain"
 #define kScreenWidth ([UIScreen mainScreen].bounds.size.width)
@@ -31,6 +28,22 @@
         NSLog(@"🔥 因为不再提示，所以不显示");
         return;
     }
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        UIWindow *validWindow = [self getValidWindow];
+        if (!validWindow) return;
+        
+        PopupView *popup = [[PopupView alloc] initWithFrame:validWindow.bounds];
+        [validWindow addSubview:popup];
+        
+        popup.alpha = 0;
+        popup.contentView.transform = CGAffineTransformMakeScale(0.8, 0.8);
+        [UIView animateWithDuration:0.3 delay:0 usingSpringWithDamping:0.9 initialSpringVelocity:0.7 options:UIViewAnimationOptionCurveEaseOut animations:^{
+            popup.alpha = 1;
+            popup.contentView.transform = CGAffineTransformIdentity;
+        } completion:nil];
+    });
+}
 
 + (UIEdgeInsets)getSafeAreaInsets {
     if (@available(iOS 11.0, *)) {
@@ -40,18 +53,15 @@
     return UIEdgeInsetsZero;
 }
 
-// 核心修复：无废弃API、无类型错误的窗口获取方法
 + (UIWindow *)getValidWindow {
     UIWindow *validWindow = nil;
     
     if (@available(iOS 13.0, *)) {
-        // 修复类型不兼容：NSSet → NSArray
         NSArray *connectedScenes = [[UIApplication sharedApplication].connectedScenes allObjects];
         for (UIScene *scene in connectedScenes) {
             if (scene.activationState != UISceneActivationStateForegroundActive) continue;
             if ([scene isKindOfClass:[UIWindowScene class]]) {
                 UIWindowScene *windowScene = (UIWindowScene *)scene;
-                // 优先取isKeyWindow（非废弃属性）
                 for (UIWindow *window in windowScene.windows) {
                     if (window.isKeyWindow) {
                         validWindow = window;
@@ -64,7 +74,6 @@
         }
     }
     
-    // 终极兜底：遍历所有窗口（无废弃API）
     if (!validWindow) {
         for (UIWindow *window in [UIApplication sharedApplication].windows) {
             if (!window.isHidden && window.windowLevel == UIWindowLevelNormal) {
@@ -109,42 +118,33 @@
     self.avatarImgView = [[UIImageView alloc] initWithFrame:CGRectMake((self.contentView.frame.size.width - 80)/2, 25, 80, 80)];
     self.avatarImgView.layer.cornerRadius = 40;
     self.avatarImgView.clipsToBounds = YES;
-    self.avatarImgView.backgroundColor = [UIColor xy_colorWithHex:0xF5F5F5];
+    self.avatarImgView.backgroundColor = [UIColor colorWithRed:0xF5/255.0 green:0xF5/255.0 blue:0xF5/255.0 alpha:1.0];
     self.avatarImgView.contentMode = UIViewContentModeScaleAspectFill;
     [self.contentView addSubview:self.avatarImgView];
     
     self.titleLab1 = [[UILabel alloc] initWithFrame:CGRectMake(20, CGRectGetMaxY(self.avatarImgView.frame) + 20, self.contentView.frame.size.width - 40, 30)];
     self.titleLab1.text = @"RednoteTools";
     self.titleLab1.font = [UIFont boldSystemFontOfSize:22];
-    self.titleLab1.textColor = [UIColor xy_colorWithHex:0x222222];
+    self.titleLab1.textColor = [UIColor colorWithRed:0x22/255.0 green:0x22/255.0 blue:0x22/255.0 alpha:1.0];
     self.titleLab1.textAlignment = NSTextAlignmentCenter;
     [self.contentView addSubview:self.titleLab1];
     
     self.titleLab2 = [[UILabel alloc] initWithFrame:CGRectMake(20, CGRectGetMaxY(self.titleLab1.frame) + 8, self.contentView.frame.size.width - 40, 24)];
     self.titleLab2.text = @"喜爱民谣";
     self.titleLab2.font = [UIFont systemFontOfSize:18 weight:UIFontWeightMedium];
-    self.titleLab2.textColor = [UIColor xy_colorWithHex:0x666666];
+    self.titleLab2.textColor = [UIColor colorWithRed:0x66/255.0 green:0x66/255.0 blue:0x66/255.0 alpha:1.0];
     self.titleLab2.textAlignment = NSTextAlignmentCenter;
     [self.contentView addSubview:self.titleLab2];
     
-    self.instructionBtn = [self createButtonWithTitle:@"使用说明" 
-                                               bgColor:[UIColor xy_colorWithHex:0x0088FF] 
-                                              textColor:[UIColor whiteColor] 
-                                                  frame:CGRectMake(25, CGRectGetMaxY(self.titleLab2.frame) + 25, self.contentView.frame.size.width - 50, 48)];
+    self.instructionBtn = [self createButtonWithTitle:@"使用说明" bgColor:[UIColor colorWithRed:0x00/255.0 green:0x88/255.0 blue:0xFF/255.0 alpha:1.0] textColor:[UIColor whiteColor] frame:CGRectMake(25, CGRectGetMaxY(self.titleLab2.frame) + 25, self.contentView.frame.size.width - 50, 48)];
     [self.instructionBtn addTarget:self action:@selector(instructionBtnClick) forControlEvents:UIControlEventTouchUpInside];
     [self.contentView addSubview:self.instructionBtn];
     
-    self.notShowAgainBtn = [self createButtonWithTitle:@"不再提示" 
-                                               bgColor:[UIColor xy_colorWithHex:0xE6E6E6] 
-                                              textColor:[UIColor xy_colorWithHex:0x666666] 
-                                                  frame:CGRectMake(25, CGRectGetMaxY(self.instructionBtn.frame) + 12, (self.contentView.frame.size.width - 60)/2, 48)];
+    self.notShowAgainBtn = [self createButtonWithTitle:@"不再提示" bgColor:[UIColor colorWithRed:0xE6/255.0 green:0xE6/255.0 blue:0xE6/255.0 alpha:1.0] textColor:[UIColor colorWithRed:0x66/255.0 green:0x66/255.0 blue:0x66/255.0 alpha:1.0] frame:CGRectMake(25, CGRectGetMaxY(self.instructionBtn.frame) + 12, (self.contentView.frame.size.width - 60)/2, 48)];
     [self.notShowAgainBtn addTarget:self action:@selector(notShowAgainBtnClick) forControlEvents:UIControlEventTouchUpInside];
     [self.contentView addSubview:self.notShowAgainBtn];
     
-    self.knowBtn = [self createButtonWithTitle:@"我知道了" 
-                                       bgColor:[UIColor xy_colorWithHex:0x0088FF] 
-                                      textColor:[UIColor whiteColor] 
-                                          frame:CGRectMake(CGRectGetMaxX(self.notShowAgainBtn.frame) + 10, CGRectGetMaxY(self.instructionBtn.frame) + 12, (self.contentView.frame.size.width - 60)/2, 48)];
+    self.knowBtn = [self createButtonWithTitle:@"我知道了" bgColor:[UIColor colorWithRed:0x00/255.0 green:0x88/255.0 blue:0xFF/255.0 alpha:1.0] textColor:[UIColor whiteColor] frame:CGRectMake(CGRectGetMaxX(self.notShowAgainBtn.frame) + 10, CGRectGetMaxY(self.instructionBtn.frame) + 12, (self.contentView.frame.size.width - 60)/2, 48)];
     [self.knowBtn addTarget:self action:@selector(knowBtnClick) forControlEvents:UIControlEventTouchUpInside];
     [self.contentView addSubview:self.knowBtn];
 }
@@ -165,16 +165,13 @@
     
     self.instructionLab = [[UILabel alloc] initWithFrame:CGRectMake(20, 20, content.frame.size.width - 40, content.frame.size.height - 80)];
     self.instructionLab.font = [UIFont systemFontOfSize:16 weight:UIFontWeightRegular];
-    self.instructionLab.textColor = [UIColor xy_colorWithHex:0x333333];
+    self.instructionLab.textColor = [UIColor colorWithRed:0x33/255.0 green:0x33/255.0 blue:0x33/255.0 alpha:1.0];
     self.instructionLab.numberOfLines = 0;
     self.instructionLab.lineBreakMode = NSLineBreakByWordWrapping;
     self.instructionLab.text = @"一只傻娟子提示\n\n图片去水印-图片预览页左下角出现 2 个下载按钮\n\n左按钮：无水印保存当前图片\n\n右按钮：无水印批量保存全部图片\n\n视频去水印-原生保存，无水印、无片头、无尾标\n\nLive Photo 实况图去水印-与图片保存逻辑通用\n\n评论区图片去水印-原生保存\n\n表情包去水印保存-原生保存";
     [content addSubview:self.instructionLab];
     
-    UIButton *closeBtn = [self createButtonWithTitle:@"关闭" 
-                                           bgColor:[UIColor xy_colorWithHex:0x0088FF] 
-                                          textColor:[UIColor whiteColor] 
-                                              frame:CGRectMake(20, CGRectGetMaxY(self.instructionLab.frame) + 10, content.frame.size.width - 40, 48)];
+    UIButton *closeBtn = [self createButtonWithTitle:@"关闭" bgColor:[UIColor colorWithRed:0x00/255.0 green:0x88/255.0 blue:0xFF/255.0 alpha:1.0] textColor:[UIColor whiteColor] frame:CGRectMake(20, CGRectGetMaxY(self.instructionLab.frame) + 10, content.frame.size.width - 40, 48)];
     [closeBtn addTarget:self action:@selector(closeInstructionView) forControlEvents:UIControlEventTouchUpInside];
     [content addSubview:closeBtn];
 }
@@ -209,7 +206,7 @@
 - (void)loadUserAvatar {
     dispatch_async(dispatch_get_global_queue(0, 0), ^{
         UIGraphicsBeginImageContextWithOptions(CGSizeMake(80, 80), NO, [UIScreen mainScreen].scale);
-        [[UIColor xy_colorWithHex:0x0088FF] setFill];
+        [[UIColor colorWithRed:0x00/255.0 green:0x88/255.0 blue:0xFF/255.0 alpha:1.0] setFill];
         UIBezierPath *path = [UIBezierPath bezierPathWithOvalInRect:CGRectMake(0, 0, 80, 80)];
         [path fill];
         UIImage *avatarImage = UIGraphicsGetImageFromCurrentImageContext();
@@ -254,26 +251,6 @@
     } completion:^(BOOL finished) {
         [self removeFromSuperview];
     }];
-}
-
-+ (void)showPopupIfNeeded {
-    BOOL notShowAgain = [[NSUserDefaults standardUserDefaults] boolForKey:kPopupNotShowAgainKey];
-    if (notShowAgain) return;
-    
-    dispatch_async(dispatch_get_main_queue(), ^{
-        UIWindow *validWindow = [self getValidWindow];
-        if (!validWindow) return;
-        
-        PopupView *popup = [[PopupView alloc] initWithFrame:validWindow.bounds];
-        [validWindow addSubview:popup];
-        
-        popup.alpha = 0;
-        popup.contentView.transform = CGAffineTransformMakeScale(0.8, 0.8);
-        [UIView animateWithDuration:0.3 delay:0 usingSpringWithDamping:0.9 initialSpringVelocity:0.7 options:UIViewAnimationOptionCurveEaseOut animations:^{
-            popup.alpha = 1;
-            popup.contentView.transform = CGAffineTransformIdentity;
-        } completion:nil];
-    });
 }
 
 @end
