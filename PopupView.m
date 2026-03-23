@@ -1,4 +1,4 @@
-#import "Tweak.h"
+#import "PopupView.h"
 #import <UIKit/UIKit.h>
 
 #define kPopupNotShowAgainKey @"RednoteToolsPopupNotShowAgain"
@@ -6,6 +6,7 @@
 #define kScreenHeight ([UIScreen mainScreen].bounds.size.height)
 #define kSafeAreaInsets ([[self class] getSafeAreaInsets])
 
+// 类扩展必须在 #import "PopupView.h" 之后
 @interface PopupView ()
 @property (nonatomic, strong) UIView *contentView;
 @property (nonatomic, strong) UIImageView *avatarImgView;
@@ -19,7 +20,6 @@
 @end
 
 @implementation PopupView
-
 + (void)showPopupIfNeeded {
     NSLog(@"🔥 showPopupIfNeeded 被调用了");
 
