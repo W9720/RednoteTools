@@ -224,7 +224,23 @@ if (@available(iOS 13.0, *)) {
         }
     }
 } else {
+    UIWindow *keyWindow = nil;
+if (@available(iOS 13.0, *)) {
+    // 遍历所有活跃场景，获取前台窗口
+    for (UIWindowScene *scene in [UIApplication sharedApplication].connectedScenes) {
+        if (scene.activationState == UISceneActivationStateForegroundActive) {
+            keyWindow = scene.windows.firstObject;
+            break;
+        }
+    }
+} else {
+    // iOS 12 及以下版本保留旧写法
     keyWindow = [UIApplication sharedApplication].keyWindow;
+}
+// 兜底：如果场景遍历没取到，取第一个可见窗口
+if (!keyWindow) {
+    keyWindow = [[UIApplication sharedApplication].windows firstObject];
+}
 }
 // 兜底：如果上面没取到，取第一个可见窗口
 if (!keyWindow) {
