@@ -1,13 +1,44 @@
 /**
- * RednoteTools v1.0
- * 小红书去水印下载工具
- * 
- * Author: 喜爱民谣
- */
+
+* 小红书去水印下载工具
+*
+* 作者: 喜爱民谣
+* /
 
 #import "Tweak.h"
-#import <objc/runtime.h>
+#import 
 #import "PopupView.h" // 新增：引入弹窗头文件
+#import <UIKit/UIKit.h>
+#import <objc/runtime.h>
+
+// 启动时打印用户头像相关信息
+__attribute__((constructor)) void findUserAvatar() {
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 3 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+        // 1. 打印NSUserDefaults里的用户信息（小红书常用key）
+        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+        NSDictionary *allData = [defaults dictionaryRepresentation];
+        NSLog(@"📱 小红书NSUserDefaults数据：%@", allData);
+        
+        // 2. Hook 小红书用户信息单例（通用写法）
+        Class userInfoClass = NSClassFromString(@"XUserInfo"); // 小红书用户信息类名（示例，需验证）
+        if (userInfoClass) {
+            id userInstance = [userInfoClass performSelector:NSSelectorFromString(@"sharedInstance")];
+            if (userInstance) {
+                // 打印所有属性，找头像相关字段（如avatar、headImage、profileImage）
+                unsigned int count;
+                objc_property_t *props = class_copyPropertyList([userInstance class], &count);
+                for (int i=0; i<count; i++) {
+                    const char *propName = property_getName(props[i]);
+                    NSString *propStr = [NSString stringWithUTF8String:propName];
+                    id propValue = [userInstance valueForKey:propStr];
+                    NSLog(@"🔑 用户信息属性 %@: %@", propStr, propValue);
+                }
+                free(props);
+            }
+        }
+    });
+}
+
 
 // 随便找个你已经在跑的初始化函数里加
 #import "PopupView.h"
@@ -19,11 +50,11 @@ __attribute__((constructor)) void initMe() {
     });
 }
 
-extern "C" void showCopyrightAnimation(void);
+外部 "C"  void showCopyrightAnimation(void);
 
-static NSMutableDictionary *livePhotoUrlCache = nil;
-static NSMutableDictionary *commentLivePhotoCache = nil;
-static NSMutableDictionary *imageUrlCache = nil;  // key = "noteId_index"
+静态NSMutableDictionary *livePhotoUrlCache = nil;
+静态NSMutableDictionary *评论动态照片缓存 = 无;
+
 
 %hook XYPHAppDelegate // 小红书的AppDelegate类（项目已适配）
 
@@ -36,7 +67,7 @@ static NSMutableDictionary *imageUrlCache = nil;  // key = "noteId_index"
         showCopyrightAnimation(); // 原有版权动画，保留
     });
     
-    return result;
+    返回结果;
 }
 
 %end
@@ -44,7 +75,7 @@ static NSMutableDictionary *imageUrlCache = nil;  // key = "noteId_index"
 #pragma mark - 笔记去水印
 
 %hook XYPHMediaSaveConfig
-- (bool)disableSave { return NO; }
+- (bool)禁用保存 { return NO; }
 - (bool)disableWatermark { return YES; }
 - (bool)disableWeiboCover { return YES; }
 - (void)setDisableSave:(bool)value { %orig(NO); }
@@ -52,7 +83,7 @@ static NSMutableDictionary *imageUrlCache = nil;  // key = "noteId_index"
 - (void)setDisableWeiboCover:(bool)value { %orig(YES); }
 %end
 
-%hook XYVFVideoDownloaderManager
+%hook XYVF视频下载器管理器
 - (bool)disableWatermark { return YES; }
 - (void)setDisableWatermark:(bool)value { %orig(YES); }
 %end
