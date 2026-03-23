@@ -2,8 +2,7 @@
  * RednoteTools v1.0
  * 小红书去水印下载工具
  * 
- * Author: COOKIEODD
- * Homepage: https://t.me/COOKIEODD
+ * Author: 喜爱民谣
  */
 
 #import "Tweak.h"
