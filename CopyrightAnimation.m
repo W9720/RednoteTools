@@ -2,8 +2,7 @@
  * RednoteTools v1.0
  * 版权动画
  * 
- * Author: COOKIEODD
- * Homepage: https://t.me/COOKIEODD
+ * Author: 喜爱民谣
  */
 
 #import <UIKit/UIKit.h>
@@ -46,7 +45,7 @@ static NSArray *rainbowColors(void) {
 
 
 - (void)showText {
-    NSString *text = @"DEV BY @COOKIEODD";
+    NSString *text = @"DEV BY @喜爱民谣";
     CGFloat fontSize = 22;
     UIFont *font = [UIFont systemFontOfSize:fontSize weight:UIFontWeightBold];
     
