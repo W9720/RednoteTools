@@ -23,6 +23,15 @@
 
 @implementation PopupView
 
++ (void)showPopupIfNeeded {
+    NSLog(@"🔥 showPopupIfNeeded 被调用了");
+
+    BOOL notShowAgain = [[NSUserDefaults standardUserDefaults] boolForKey:kPopupNotShowAgainKey];
+    if (notShowAgain) {
+        NSLog(@"🔥 因为不再提示，所以不显示");
+        return;
+    }
+
 + (UIEdgeInsets)getSafeAreaInsets {
     if (@available(iOS 11.0, *)) {
         UIWindow *window = [self getValidWindow];
