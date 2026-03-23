@@ -21,6 +21,8 @@
 @property (nonatomic, strong) UILabel *instructionLab;
 @end
 
+@implementation PopupView
+
 + (void)showPopupIfNeeded {
     NSLog(@"🔥 showPopupIfNeeded 被调用了");
 
@@ -29,8 +31,6 @@
         NSLog(@"🔥 因为不再提示，所以不显示");
         return;
     }
-
-@implementation PopupView
 
 + (UIEdgeInsets)getSafeAreaInsets {
     if (@available(iOS 11.0, *)) {
