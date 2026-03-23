@@ -1,6 +1,6 @@
-Package: com.cookie.rednotetools
+Package: com.xamy.rednotetools
 Name: RednoteTools
-Version: 1.0
+Version: 1.1
 Architecture: iphoneos-arm
 Description: 小红书去水印下载工具。支持笔记图片/视频/Live Photo去水印保存，评论区图片/Live Photo/表情包保存，批量下载等功能。
 Maintainer:喜爱民谣
